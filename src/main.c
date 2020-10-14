@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #define MAX_ELEMENTS_IN_ARRAY 100
 
@@ -177,7 +178,7 @@ void copy_array(int *dest, int const *src, size_t array_size) {
 
 size_t count_swap(int const *first_array, int const *second_array, size_t arrays_size) {
     size_t swap_count = 0;
-    for (int i = 0; i < arrays_size; ++i) {
+    for (size_t i = 0; i < arrays_size; ++i) {
         if (first_array[i] != second_array[i]) {
             swap_count++;
         }
