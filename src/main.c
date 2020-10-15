@@ -106,7 +106,8 @@ parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_cor
         return param;
     } else {
         fprintf(stderr, "Wrong parameter!!!");
-        exit(-5);
+        parameter_t p = {FROM, INT_MAX};
+        return p;
     }
 }
 
@@ -156,7 +157,7 @@ int *read_array(size_t *array_size) {
     while (div == ' ') {
         if(scanf("%d%c", &tmp_array[array_iterator++], &div) < 0) {
             error("Cannot read element");
-            exit(-1);
+            return NULL;
         }
     }
     *array_size = array_iterator;
