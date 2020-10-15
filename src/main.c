@@ -69,7 +69,7 @@ int *create_new_array_from_old_array(int const *array, size_t array_size, int fr
         if (array[i] > from && array[i] < to) {
             new_array[new_array_iterator++] = array[i];
         } else if (array[i] <= from) {
-            printf("%d ", array[i]);
+            fprintf(stdout, "%d ", array[i]);
         } else if (array[i] >= to) {
             error("%d ", array[i]);
         }
