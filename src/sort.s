@@ -2,50 +2,71 @@
 	.text
 	.p2align 4
 	.globl	swap
-	.def	swap;	.scl	2;	.type	32;	.endef
-	.seh_proc	swap
+	.type	swap, @function
 swap:
-	.seh_endprologue
-	movl	(%rcx), %eax
-	movl	(%rdx), %r8d
-	movl	%r8d, (%rcx)
-	movl	%eax, (%rdx)
+.LFB0:
+	.cfi_startproc
+	endbr64
+	movl	(%rdi), %eax
+	movl	(%rsi), %edx
+	movl	%edx, (%rdi)
+	movl	%eax, (%rsi)
 	ret
-	.seh_endproc
+	.cfi_endproc
+.LFE0:
+	.size	swap, .-swap
 	.p2align 4
 	.globl	sort_array
-	.def	sort_array;	.scl	2;	.type	32;	.endef
-	.seh_proc	sort_array
+	.type	sort_array, @function
 sort_array:
-	.seh_endprologue
-	movq	%rcx, %r9
-	movq	%rdx, %r10
-	cmpq	$1, %rdx
+.LFB1:
+	.cfi_startproc
+	endbr64
+	cmpq	$1, %rsi
 	jbe	.L3
-	movq	%rcx, %r8
-	movl	$1, %r11d
+	movq	%rdi, %r8
+	movl	$1, %r9d
 	.p2align 4,,10
 	.p2align 3
 .L5:
-	movq	%r11, %rax
+	movq	%r9, %rax
 	.p2align 4,,10
 	.p2align 3
 .L7:
 	movl	(%r8), %edx
-	movl	(%r9,%rax,4), %ecx
+	movl	(%rdi,%rax,4), %ecx
 	cmpl	%ecx, %edx
 	jle	.L6
 	movl	%ecx, (%r8)
-	movl	%edx, (%r9,%rax,4)
+	movl	%edx, (%rdi,%rax,4)
 .L6:
 	addq	$1, %rax
-	cmpq	%rax, %r10
+	cmpq	%rax, %rsi
 	ja	.L7
-	addq	$1, %r11
+	addq	$1, %r9
 	addq	$4, %r8
-	cmpq	%r11, %r10
+	cmpq	%r9, %rsi
 	jne	.L5
 .L3:
 	ret
-	.seh_endproc
-	.ident	"GCC: (GNU) 10.2.0"
+	.cfi_endproc
+.LFE1:
+	.size	sort_array, .-sort_array
+	.ident	"GCC: (Ubuntu 9.3.0-10ubuntu2) 9.3.0"
+	.section	.note.GNU-stack,"",@progbits
+	.section	.note.gnu.property,"a"
+	.align 8
+	.long	 1f - 0f
+	.long	 4f - 1f
+	.long	 5
+0:
+	.string	 "GNU"
+1:
+	.align 8
+	.long	 0xc0000002
+	.long	 3f - 2f
+2:
+	.long	 0x3
+3:
+	.align 8
+4:
