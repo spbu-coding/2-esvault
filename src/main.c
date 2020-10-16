@@ -2,7 +2,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+<<<<<<< HEAD
 //for new commit
+=======
+
+>>>>>>> f3a61d776550d2d82853ca81be6cb7116d9c48dd
 #define MAX_ELEMENTS_IN_ARRAY 100
 
 #define error(...) (fprintf(stderr, __VA_ARGS__))
@@ -106,7 +110,12 @@ parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_cor
         return param;
     } else {
         fprintf(stderr, "Wrong parameter!!!");
+<<<<<<< HEAD
         exit(-5);
+=======
+        parameter_t p = {FROM, INT_MAX};
+        return p;
+>>>>>>> f3a61d776550d2d82853ca81be6cb7116d9c48dd
     }
 }
 
@@ -156,7 +165,11 @@ int *read_array(size_t *array_size) {
     while (div == ' ') {
         if(scanf("%d%c", &tmp_array[array_iterator++], &div) < 0) {
             error("Cannot read element");
+<<<<<<< HEAD
             exit(-1);
+=======
+            return NULL;
+>>>>>>> f3a61d776550d2d82853ca81be6cb7116d9c48dd
         }
     }
     *array_size = array_iterator;
