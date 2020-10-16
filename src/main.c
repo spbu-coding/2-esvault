@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
-
+//for new commit
 #define MAX_ELEMENTS_IN_ARRAY 100
 
 #define error(...) (fprintf(stderr, __VA_ARGS__))
