@@ -2,11 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
-<<<<<<< HEAD
-//for new commit
-=======
 
->>>>>>> f3a61d776550d2d82853ca81be6cb7116d9c48dd
 #define MAX_ELEMENTS_IN_ARRAY 100
 
 #define error(...) (fprintf(stderr, __VA_ARGS__))
@@ -25,8 +21,10 @@ parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_cor
 int set_parameter_values(int argv, char **argc, int *from, int *to);
 
 int *read_array(size_t *array_size);
-int *create_new_array_from_old_array(int const *array, size_t array_size, int from, int to, size_t *new_size);
+int *create_new_array(int const *array, size_t array_size, int from, int to, size_t *new_size, int *stdout_array,
+        size_t *out_size, int *stderr_array, size_t *err_size);
 void copy_array(int *dest, int const *src, size_t array_size);
+void print_array(FILE *stream, int *array, size_t array_size);
 size_t count_swap(int const *first_array, int const *second_array, size_t arrays_size);
 
 void sort_array(int *array, size_t array_size);
@@ -41,7 +39,14 @@ int main(int argv, char *argc[]) {
     size_t array_size = 0;
     int *array = read_array(&array_size);
     size_t new_array_size = 0;
-    int *new_array = create_new_array_from_old_array(array, array_size, from, to, &new_array_size);
+    int stdout_array[MAX_ELEMENTS_IN_ARRAY];
+    int stderr_array[MAX_ELEMENTS_IN_ARRAY];
+    size_t out_size = 0;
+    size_t err_size = 0;
+    int *new_array = create_new_array(array, array_size, from, to, &new_array_size, stdout_array,
+            &out_size, stderr_array, &err_size);
+    print_array(stdout, stdout_array, out_size);
+    print_array(stderr, stderr_array, err_size);
     int *new_array_copy = malloc(new_array_size * sizeof(int));
     if (new_array_copy == NULL) {
         error("Cannot allocate array");
@@ -55,7 +60,8 @@ int main(int argv, char *argc[]) {
     return count_swap(new_array, new_array_copy, new_array_size);
 }
 
-int *create_new_array_from_old_array(int const *array, size_t array_size, int from, int to, size_t *new_size) {
+int *create_new_array(int const *array, size_t array_size, int from, int to, size_t *new_size, int *stdout_array,
+        size_t *out_size, int *stderr_array, size_t *err_size) {
     size_t new_array_size = 0;
     for (size_t i = 0; i < array_size; ++i) {
         if (array[i] > from && array[i] < to) {
@@ -69,15 +75,19 @@ int *create_new_array_from_old_array(int const *array, size_t array_size, int fr
         return NULL;
     }
     size_t new_array_iterator = 0;
+    size_t stdout_array_iterator = 0;
+    size_t stderr_array_iterator = 0;
     for (size_t i = 0; i < array_size; ++i) {
         if (array[i] > from && array[i] < to) {
             new_array[new_array_iterator++] = array[i];
         } else if (array[i] <= from) {
-            fprintf(stdout, "%d ", array[i]);
+            stdout_array[stdout_array_iterator++] = array[i];
         } else if (array[i] >= to) {
-            error("%d ", array[i]);
+            stderr_array[stderr_array_iterator++] = array[i];
         }
     }
+    *out_size = stdout_array_iterator;
+    *err_size = stderr_array_iterator;
     return new_array;
 }
 
@@ -110,12 +120,8 @@ parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_cor
         return param;
     } else {
         fprintf(stderr, "Wrong parameter!!!");
-<<<<<<< HEAD
-        exit(-5);
-=======
         parameter_t p = {FROM, INT_MAX};
         return p;
->>>>>>> f3a61d776550d2d82853ca81be6cb7116d9c48dd
     }
 }
 
@@ -165,11 +171,7 @@ int *read_array(size_t *array_size) {
     while (div == ' ') {
         if(scanf("%d%c", &tmp_array[array_iterator++], &div) < 0) {
             error("Cannot read element");
-<<<<<<< HEAD
-            exit(-1);
-=======
             return NULL;
->>>>>>> f3a61d776550d2d82853ca81be6cb7116d9c48dd
         }
     }
     *array_size = array_iterator;
@@ -189,9 +191,16 @@ void copy_array(int *dest, int const *src, size_t array_size) {
     }
 }
 
+void print_array(FILE *stream, int *array, size_t array_size) {
+    for (size_t i = 0; i < array_size; ++i) {
+        fprintf(stream, "%d ", array[i]);
+    }
+    fprintf(stream, "\n");
+}
+
 size_t count_swap(int const *first_array, int const *second_array, size_t arrays_size) {
     size_t swap_count = 0;
-    for (size_t i = 0; i < arrays_size; ++i) {
+    for (int i = 0; i < arrays_size; ++i) {
         if (first_array[i] != second_array[i]) {
             swap_count++;
         }
