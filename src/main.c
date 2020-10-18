@@ -18,10 +18,10 @@ typedef struct {
 } parameter_t;
 
 parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_correct);
-int set_parameter_values(int argv, char **argc, int *from, int *to);
+int set_parameters_values(int argv, char **argc, int *from, int *to);
 
 int read_array(int *array, size_t *array_size);
-void create_new_array(int const *array, size_t array_size, int *new_array, size_t *new_size, int from, int to);
+int create_new_array(int const *array, size_t array_size, int *new_array, size_t *new_size, int from, int to);
 void copy_array(int *dest, int const *src, size_t array_size);
 size_t count_swap(int const *first_array, int const *second_array, size_t arrays_size);
 
@@ -30,7 +30,7 @@ void sort_array(int *array, size_t array_size);
 int main(int argv, char *argc[]) {
     int from = INT_MIN;
     int to = INT_MAX;
-    int parameters_correctness = set_parameter_values(argv, argc, &from, &to);
+    int parameters_correctness = set_parameters_values(argv, argc, &from, &to);
     if (parameters_correctness != 0) {
         return parameters_correctness;
     }
@@ -50,7 +50,10 @@ int main(int argv, char *argc[]) {
         error("Cannot allocate new array");
         return -5;
     }
-    create_new_array(array, array_size, new_array, &new_array_size, from, to);
+    int creating_status = create_new_array(array, array_size, new_array, &new_array_size, from, to);
+    if (creating_status != 0) {
+        return creating_status;
+    }
     int *new_array_copy = (int *)malloc(new_array_size * sizeof(int));
     if (new_array_copy == NULL) {
         error("Cannot allocate new array copy");
@@ -59,24 +62,28 @@ int main(int argv, char *argc[]) {
     copy_array(new_array_copy, new_array, new_array_size);
     sort_array(new_array, new_array_size);
     int swap_count = count_swap(new_array, new_array_copy, new_array_size);
-    free(array);
-    free(new_array);
-    free(new_array_copy);
     return swap_count;
 }
 
-void create_new_array(int const *array, size_t array_size, int *new_array, size_t *new_size, int from, int to) {
+int create_new_array(int const *array, size_t array_size, int *new_array, size_t *new_size, int from, int to) {
     size_t new_array_iterator = 0;
     for (size_t i = 0; i < array_size; ++i) {
         if (array[i] > from && array[i] < to) {
             new_array[new_array_iterator++] = array[i];
         } else if (array[i] <= from) {
-            fprintf(stdout, "%d ", array[i]);
+            if (fprintf(stdout, "%d ", array[i]) < 0) {
+                error("Cannot write to stdout");
+                return -5;
+            }
         } else if (array[i] >= to) {
-            fprintf(stderr, "%d ", array[i]);
+            if (fprintf(stderr, "%d ", array[i]) < 0) {
+                error("Cannot write to stderr");
+                return -5;
+            }
         }
     }
     *new_size = new_array_iterator;
+    return 0;
 }
 
 parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_correct) {
@@ -113,7 +120,7 @@ parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_cor
     }
 }
 
-int set_parameter_values(int argv, char **argc, int *from, int *to) {
+int set_parameters_values(int argv, char **argc, int *from, int *to) {
     if (argv < 2) {
         return -1;
     }
