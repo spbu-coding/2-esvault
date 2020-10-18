@@ -1,189 +1,146 @@
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <getopt.h>
 #include <limits.h>
-
-#define MAX_ELEMENTS_IN_ARRAY 100
+#include <stdlib.h>
+#include <stdbool.h>
 
 #define error(...) (fprintf(stderr, __VA_ARGS__))
 
-typedef enum {
-    FROM,
-    TO
-} PARAMETER;
+#define MAX_NUMBER_OF_ELEMENTS 100
+#define DECIMAL_NOTATION 10
+#define MIN_NUMBER_OF_PARAMETERS 2
+#define MAX_NUMBER_OF_PARAMETERS 3
 
-typedef struct {
-    PARAMETER type;
-    int value;
-} parameter_t;
+#define MEMORY_ALLOCATION_ERROR_CODE -5
+#define SCANF_ERROR_CODE -6
+#define FPRINTF_ERROR_CODE -7
 
-parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_correct);
-int set_parameters_values(int argv, char **argc, int *from, int *to);
+extern int selection_sort(long long *, int);
 
-int read_array(int *array, size_t *array_size);
-int create_new_array(int const *array, size_t array_size, int *new_array, size_t *new_size, int from, int to);
-void copy_array(int *dest, int const *src, size_t array_size);
-size_t count_swap(int const *first_array, int const *second_array, size_t arrays_size);
-
-void sort_array(int *array, size_t array_size);
-
-int main(int argv, char *argc[]) {
-    int from = INT_MIN;
-    int to = INT_MAX;
-    int parameters_correctness = set_parameters_values(argv, argc, &from, &to);
-    if (parameters_correctness != 0) {
-        return parameters_correctness;
-    }
-    size_t array_size = 0;
-    int *array = (int *)malloc(MAX_ELEMENTS_IN_ARRAY * sizeof(int));
-    if (array == NULL) {
-        error("Cannot allocate array");
-        return -5;
-    }
-    int reading_result = read_array(array, &array_size);
-    if (reading_result != 0) {
-        return reading_result;
-    }
-    size_t new_array_size = 0;
-    int *new_array = (int *)malloc(MAX_ELEMENTS_IN_ARRAY * sizeof(int));
-    if (new_array == NULL) {
-        error("Cannot allocate new array");
-        return -5;
-    }
-    int creating_status = create_new_array(array, array_size, new_array, &new_array_size, from, to);
-    if (creating_status != 0) {
-        return creating_status;
-    }
-    int *new_array_copy = (int *)malloc(new_array_size * sizeof(int));
-    if (new_array_copy == NULL) {
-        error("Cannot allocate new array copy");
-        return -5;
-    }
-    copy_array(new_array_copy, new_array, new_array_size);
-    sort_array(new_array, new_array_size);
-    int swap_count = count_swap(new_array, new_array_copy, new_array_size);
-    return swap_count;
-}
-
-int create_new_array(int const *array, size_t array_size, int *new_array, size_t *new_size, int from, int to) {
-    size_t new_array_iterator = 0;
-    for (size_t i = 0; i < array_size; ++i) {
-        if (array[i] > from && array[i] < to) {
-            new_array[new_array_iterator++] = array[i];
-        } else if (array[i] <= from) {
-            if (fprintf(stdout, "%d ", array[i]) < 0) {
-                error("Cannot write to stdout");
-                return -5;
-            }
-        } else if (array[i] >= to) {
-            if (fprintf(stderr, "%d ", array[i]) < 0) {
-                error("Cannot write to stderr");
-                return -5;
-            }
-        }
-    }
-    *new_size = new_array_iterator;
-    return 0;
-}
-
-parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_correct) {
-    char *token = strtok(parameter, "=");
-    char *val = strtok(NULL, "=");
-    parameter_t param;
-    if (strcmp(token, "--from") == 0) {
-        param.type = FROM;
-        int tmp = strtol(val, &val, 10);
-        if (tmp || val[0] == '0') {
-            param.value = tmp;
-            *is_from_correct = 1;
-        } else {
-            param.value = 0;
-            *is_from_correct = 0;
-        }
-        return param;
-    } else if (strcmp(token, "--to") == 0) {
-        param.type = TO;
-        int tmp = strtol(val, &val, 10);
-        if (tmp || val[0] == '0') {
-            param.value = tmp;
-            *is_to_correct = 1;
-        } else {
-            param.value = 0;
-            *is_to_correct = 0;
-        }
-
-        return param;
-    } else {
-        error( "Wrong parameter!!!");
-        parameter_t p = {FROM, INT_MAX};
-        return p;
-    }
-}
-
-int set_parameters_values(int argv, char **argc, int *from, int *to) {
-    if (argv < 2) {
+int parsing_and_checking_parameters(const int *argc, char **argv, long long *from, long long *to) {
+    bool first_parameter_is_entered = false, second_parameter_is_entered = false;
+    if (*argc < MIN_NUMBER_OF_PARAMETERS)
         return -1;
-    }
-    if (argv > 3) {
+    if (*argc > MAX_NUMBER_OF_PARAMETERS)
         return -2;
-    }
-    int from_parameter_count = 0;
-    int to_parameter_count = 0;
-    int is_from_correct = 1;
-    int is_to_correct = 1;
-    for (int i = 1; i < argv; ++i) {
-        parameter_t param = read_parameter(argc[i], &is_from_correct, &is_to_correct);
-        switch (param.type) {
-            case FROM:
-                from_parameter_count++;
-                *from = param.value;
+
+    const struct option long_options[] = {
+            {"from", optional_argument, NULL, 'f'},
+            {"to",   optional_argument, NULL, 't'},
+            {NULL,   0,                 NULL, 0}
+    };
+    int option_index = 0;
+
+    opterr = 0; // Disabling getopt() error messages
+    optind = 1; // Setting the index on the first element of parameters
+
+    int result_of_reading = getopt_long(*argc, argv, "", long_options, &option_index);
+    while (result_of_reading != -1) {
+        switch (result_of_reading) {
+            case 'f':
+                if (first_parameter_is_entered)
+                    return -3;
+                *from = strtoll((optarg ? optarg : "0"), NULL, DECIMAL_NOTATION);
+                first_parameter_is_entered = true;
                 break;
-            case TO:
-                to_parameter_count++;
-                *to = param.value;
+
+            case 't':
+                if (second_parameter_is_entered)
+                    return -3;
+                *to = strtoll((optarg ? optarg : "0"), NULL, DECIMAL_NOTATION);
+                second_parameter_is_entered = true;
                 break;
+
+            case '?':
+                break;
+
+            default:
+                return -4;
         }
+        result_of_reading = getopt_long(*argc, argv, "", long_options, &option_index);
     }
-    if (from_parameter_count > 1 || to_parameter_count > 1) {
-        return -3;
-    }
-    if (is_from_correct || is_to_correct) {
-        if (is_from_correct && !is_to_correct) {
-            *to = INT_MAX;
-        } else if (!is_from_correct && is_to_correct) {
-            *from = INT_MIN;
-        }
-    } else {
+    if (!first_parameter_is_entered && !second_parameter_is_entered)
         return -4;
+    return 0;
+}
+
+int parsing_the_input_array(long long *input_array, int *input_cardinality) {
+    char separator = ' ';
+    while (separator == ' ') {
+        if (scanf("%lld%c", &input_array[*input_cardinality], &separator) < 2) {
+            error("Cannot read the [%d] element of input array\n", *input_cardinality);
+            return SCANF_ERROR_CODE;
+        }
+        *input_cardinality += 1;
     }
     return 0;
 }
 
-int read_array(int *array, size_t *array_size) {
-    char div = ' ';
-    size_t array_iterator = 0;
-    while (div == ' ') {
-        if(scanf("%d%c", &array[array_iterator++], &div) < 2) {
-            error("Cannot read element");
-            return -5;
+int main(int argc, char **argv) {
+    long long from = LLONG_MIN, to = LLONG_MAX;
+    int parsing_parameters_result = parsing_and_checking_parameters(&argc, argv, &from, &to);
+    if (parsing_parameters_result)
+        return parsing_parameters_result;
+
+    long long *input_array = (long long *) malloc(sizeof(long long) * MAX_NUMBER_OF_ELEMENTS);
+    if (input_array == NULL) {
+        error("Cannot allocate memory for input array\n");
+        return MEMORY_ALLOCATION_ERROR_CODE;
+    }
+
+    int input_cardinality = 0;
+    int parsing_array_result = parsing_the_input_array(input_array, &input_cardinality);
+    if (parsing_array_result)
+        return parsing_array_result;
+
+    input_array = (long long *) realloc(input_array, sizeof(long long) * input_cardinality);
+    if (input_array == NULL) {
+        error("Cannot reallocate memory for input array\n");
+        return MEMORY_ALLOCATION_ERROR_CODE;
+    }
+
+    int sorted_cardinality = 0;
+    for (int i = 0; i < input_cardinality; ++i) {
+        if (input_array[i] <= from)
+            if (fprintf(stdout, "%lld ", input_array[i]) < 0) {
+                error("Cannot write the %d element to stdout\n", i);
+                return FPRINTF_ERROR_CODE;
+            }
+        if (input_array[i] >= to)
+            if (fprintf(stderr, "%lld ", input_array[i]) < 0) {
+                error("Cannot write the %d element to stderr\n", i);
+                return FPRINTF_ERROR_CODE;
+            }
+        if (input_array[i] > from && input_array[i] < to)
+            ++sorted_cardinality;
+    }
+
+    long long *sorted_array = (long long *) malloc(sizeof(long long) * sorted_cardinality);
+    if (sorted_array == NULL) {
+        error("Cannot allocate memory for sorted array\n");
+        return MEMORY_ALLOCATION_ERROR_CODE;
+    }
+
+    int counter = 0;
+    for (int i = 0; i < input_cardinality; ++i) {
+        if (input_array[i] > from && input_array[i] < to) {
+            sorted_array[counter] = input_array[i];
+            ++counter;
         }
     }
-    *array_size = array_iterator;
-    return 0;
-}
 
-void copy_array(int *dest, int const *src, size_t array_size) {
-    for (size_t i = 0; i < array_size; ++i) {
-        dest[i] = src[i];
-    }
-}
-
-size_t count_swap(int const *first_array, int const *second_array, size_t arrays_size) {
-    size_t swap_count = 0;
-    for (size_t i = 0; i < arrays_size; ++i) {
-        if (first_array[i] != second_array[i]) {
-            swap_count++;
+    selection_sort(sorted_array, sorted_cardinality);
+    int number_of_permutations = 0;
+    counter = 0;
+    for (int i = 0; i < input_cardinality; ++i) {
+        if (input_array[i] > from && input_array[i] < to) {
+            if (input_array[i] != sorted_array[counter])
+                ++number_of_permutations;
+            ++counter;
         }
     }
-    return swap_count;
+
+    free(input_array);
+    free(sorted_array);
+    return number_of_permutations;
 }
