@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+//
 
 #define MAX_ELEMENTS_IN_ARRAY 100
 
@@ -20,7 +21,7 @@ typedef struct {
 parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_correct);
 int set_parameter_values(int argv, char **argc, int *from, int *to);
 
-void read_array(int *array, size_t *array_size);
+int *read_array(size_t *array_size);
 int *create_new_array(int const *array, size_t array_size, int from, int to, size_t *new_size, int *stdout_array,
         size_t *out_size, int *stderr_array, size_t *err_size);
 void copy_array(int *dest, int const *src, size_t array_size);
@@ -37,8 +38,7 @@ int main(int argv, char *argc[]) {
         return parameters_correctness;
     }
     size_t array_size = 0;
-    int *array = (int *)malloc(MAX_ELEMENTS_IN_ARRAY * sizeof(int));
-    read_array(array, &array_size);
+    int *array = read_array(&array_size);
     size_t new_array_size = 0;
     int stdout_array[MAX_ELEMENTS_IN_ARRAY];
     int stderr_array[MAX_ELEMENTS_IN_ARRAY];
@@ -48,18 +48,17 @@ int main(int argv, char *argc[]) {
             &out_size, stderr_array, &err_size);
     print_array(stdout, stdout_array, out_size);
     print_array(stderr, stderr_array, err_size);
-    int *new_array_copy = (int *)malloc(new_array_size * sizeof(int));
+    int *new_array_copy = malloc(new_array_size * sizeof(int));
     if (new_array_copy == NULL) {
         error("Cannot allocate array");
         return -5;
     }
     copy_array(new_array_copy, new_array, new_array_size);
     sort_array(new_array, new_array_size);
-    int swap_count = count_swap(new_array, new_array_copy, new_array_size);
     free(array);
     free(new_array);
     free(new_array_copy);
-    return swap_count;
+    return count_swap(new_array, new_array_copy, new_array_size);
 }
 
 int *create_new_array(int const *array, size_t array_size, int from, int to, size_t *new_size, int *stdout_array,
@@ -71,7 +70,7 @@ int *create_new_array(int const *array, size_t array_size, int from, int to, siz
         }
     }
     *new_size = new_array_size;
-    int *new_array = (int *)malloc(new_array_size * sizeof(int));
+    int *new_array = malloc(new_array_size * sizeof(int));
     if (new_array == NULL) {
         error("Cannot allocate memory for new array");
         return NULL;
@@ -166,16 +165,25 @@ int set_parameter_values(int argv, char **argc, int *from, int *to) {
     return 0;
 }
 
-void read_array(int *array, size_t *array_size) {
+int *read_array(size_t *array_size) {
     char div = ' ';
     size_t array_iterator = 0;
+    int tmp_array[MAX_ELEMENTS_IN_ARRAY];
     while (div == ' ') {
-        if(scanf("%d%c", &array[array_iterator++], &div) < 0) {
+        if(scanf("%d%c", &tmp_array[array_iterator++], &div) < 0) {
             error("Cannot read element");
-            exit(-5);
+            return NULL;
         }
     }
     *array_size = array_iterator;
+    int *array = malloc(array_iterator * (sizeof(int)));
+    if (array == NULL) {
+        return NULL;
+    }
+    for (size_t i = 0; i < array_iterator; ++i) {
+        array[i] = tmp_array[i];
+    }
+    return array;
 }
 
 void copy_array(int *dest, int const *src, size_t array_size) {
@@ -193,7 +201,7 @@ void print_array(FILE *stream, int *array, size_t array_size) {
 
 size_t count_swap(int const *first_array, int const *second_array, size_t arrays_size) {
     size_t swap_count = 0;
-    for (int i = 0; i < arrays_size; ++i) {
+    for (size_t i = 0; i < arrays_size; ++i) {
         if (first_array[i] != second_array[i]) {
             swap_count++;
         }
