@@ -4,28 +4,30 @@
 	.globl	sort_array
 	.type	sort_array, @function
 sort_array:
-.LFB0:
-	.cfi_startproc
-	endbr64
-	ret
-	.cfi_endproc
-.LFE0:
-	.size	sort_array, .-sort_array
-	.ident	"GCC: (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0"
-	.section	.note.GNU-stack,"",@progbits
-	.section	.note.gnu.property,"a"
-	.align 8
-	.long	 1f - 0f
-	.long	 4f - 1f
-	.long	 5
-0:
-	.string	 "GNU"
-1:
-	.align 8
-	.long	 0xc0000002
-	.long	 3f - 2f
-2:
-	.long	 0x3
-3:
-	.align 8
-4:
+        lea     r9d, [rsi-1]
+        xor     r8d, r8d
+        test    esi, esi
+        jle     .L11
+.L5:
+        mov     ecx, DWORD PTR [rdi+r8*4]
+        mov     rax, r8
+.L4:
+        mov     edx, DWORD PTR [rdi+rax*4]
+        cmp     edx, ecx
+        jge     .L3
+        mov     DWORD PTR [rdi+rax*4], ecx
+        mov     ecx, edx
+        mov     DWORD PTR [rdi+r8*4], edx
+.L3:
+        add     rax, 1
+        cmp     esi, eax
+        jg      .L4
+        lea     rax, [r8+1]
+        cmp     r8, r9
+        je      .L12
+        mov     r8, rax
+        jmp     .L5
+.L12:
+        ret
+.L11:
+        ret
