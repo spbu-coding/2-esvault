@@ -20,11 +20,9 @@ typedef struct {
 parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_correct);
 int set_parameter_values(int argv, char **argc, int *from, int *to);
 
-void read_array(int *array, size_t *array_size);
-int *create_new_array(int const *array, size_t array_size, int from, int to, size_t *new_size, int *stdout_array,
-        size_t *out_size, int *stderr_array, size_t *err_size);
+int read_array(int *array, size_t *array_size);
+void create_new_array(int const *array, size_t array_size, int *new_array, size_t *new_size, int from, int to);
 void copy_array(int *dest, int const *src, size_t array_size);
-void print_array(FILE *stream, int *array, size_t array_size);
 size_t count_swap(int const *first_array, int const *second_array, size_t arrays_size);
 
 void sort_array(int *array, size_t array_size);
@@ -38,19 +36,24 @@ int main(int argv, char *argc[]) {
     }
     size_t array_size = 0;
     int *array = (int *)malloc(MAX_ELEMENTS_IN_ARRAY * sizeof(int));
-    read_array(array, &array_size);
+    if (array == NULL) {
+        error("Cannot allocate array");
+        return -5;
+    }
+    int reading_result = read_array(array, &array_size);
+    if (reading_result != 0) {
+        return reading_result;
+    }
     size_t new_array_size = 0;
-    int stdout_array[MAX_ELEMENTS_IN_ARRAY];
-    int stderr_array[MAX_ELEMENTS_IN_ARRAY];
-    size_t out_size = 0;
-    size_t err_size = 0;
-    int *new_array = create_new_array(array, array_size, from, to, &new_array_size, stdout_array,
-            &out_size, stderr_array, &err_size);
-    print_array(stdout, stdout_array, out_size);
-    print_array(stderr, stderr_array, err_size);
+    int *new_array = (int *)malloc(MAX_ELEMENTS_IN_ARRAY * sizeof(int));
+    if (new_array == NULL) {
+        error("Cannot allocate new array");
+        return -5;
+    }
+    create_new_array(array, array_size, new_array, &new_array_size, from, to);
     int *new_array_copy = (int *)malloc(new_array_size * sizeof(int));
     if (new_array_copy == NULL) {
-        error("Cannot allocate array");
+        error("Cannot allocate new array copy");
         return -5;
     }
     copy_array(new_array_copy, new_array, new_array_size);
@@ -62,35 +65,18 @@ int main(int argv, char *argc[]) {
     return swap_count;
 }
 
-int *create_new_array(int const *array, size_t array_size, int from, int to, size_t *new_size, int *stdout_array,
-        size_t *out_size, int *stderr_array, size_t *err_size) {
-    size_t new_array_size = 0;
-    for (size_t i = 0; i < array_size; ++i) {
-        if (array[i] > from && array[i] < to) {
-            new_array_size++;
-        }
-    }
-    *new_size = new_array_size;
-    int *new_array = (int *)malloc(new_array_size * sizeof(int));
-    if (new_array == NULL) {
-        error("Cannot allocate memory for new array");
-        return NULL;
-    }
+void create_new_array(int const *array, size_t array_size, int *new_array, size_t *new_size, int from, int to) {
     size_t new_array_iterator = 0;
-    size_t stdout_array_iterator = 0;
-    size_t stderr_array_iterator = 0;
     for (size_t i = 0; i < array_size; ++i) {
         if (array[i] > from && array[i] < to) {
             new_array[new_array_iterator++] = array[i];
         } else if (array[i] <= from) {
-            stdout_array[stdout_array_iterator++] = array[i];
+            fprintf(stdout, "%d ", array[i]);
         } else if (array[i] >= to) {
-            stderr_array[stderr_array_iterator++] = array[i];
+            fprintf(stderr, "%d ", array[i]);
         }
     }
-    *out_size = stdout_array_iterator;
-    *err_size = stderr_array_iterator;
-    return new_array;
+    *new_size = new_array_iterator;
 }
 
 parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_correct) {
@@ -121,7 +107,7 @@ parameter_t read_parameter(char *parameter, int *is_from_correct, int *is_to_cor
 
         return param;
     } else {
-        fprintf(stderr, "Wrong parameter!!!");
+        error( "Wrong parameter!!!");
         parameter_t p = {FROM, INT_MAX};
         return p;
     }
@@ -166,29 +152,23 @@ int set_parameter_values(int argv, char **argc, int *from, int *to) {
     return 0;
 }
 
-void read_array(int *array, size_t *array_size) {
+int read_array(int *array, size_t *array_size) {
     char div = ' ';
     size_t array_iterator = 0;
     while (div == ' ') {
-        if(scanf("%d%c", &array[array_iterator++], &div) < 0) {
+        if(scanf("%d%c", &array[array_iterator++], &div) < 2) {
             error("Cannot read element");
-            exit(-5);
+            return -5;
         }
     }
     *array_size = array_iterator;
+    return 0;
 }
 
 void copy_array(int *dest, int const *src, size_t array_size) {
     for (size_t i = 0; i < array_size; ++i) {
         dest[i] = src[i];
     }
-}
-
-void print_array(FILE *stream, int *array, size_t array_size) {
-    for (size_t i = 0; i < array_size; ++i) {
-        fprintf(stream, "%d ", array[i]);
-    }
-    fprintf(stream, "\n");
 }
 
 size_t count_swap(int const *first_array, int const *second_array, size_t arrays_size) {
