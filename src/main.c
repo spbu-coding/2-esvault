@@ -25,7 +25,7 @@ int create_new_array(int const *array, size_t array_size, int *new_array, size_t
 void copy_array(int *dest, int const *src, size_t array_size);
 size_t count_swap(int const *first_array, int const *second_array, size_t arrays_size);
 
-void sort_array(int *array, size_t array_size);
+void sort_array(int *array, int array_size);
 
 int main(int argv, char *argc[]) {
     int from = INT_MIN;
