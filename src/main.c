@@ -76,11 +76,6 @@ parameter_t read_parameter(char parameter[], int *is_from_correct, int *is_to_co
     parameter_t param;
     if (strcmp(token, "--from") == 0) {
         param.type = FROM;
-        if (val == NULL) {
-            param.value = 0;
-            *is_from_correct = 0;
-            return param;
-        }
         int tmp = strtol(val, &val, 10);
         if (tmp || val[0] == '0') {
             param.value = tmp;
@@ -92,11 +87,6 @@ parameter_t read_parameter(char parameter[], int *is_from_correct, int *is_to_co
         return param;
     } else if (strcmp(token, "--to") == 0) {
         param.type = TO;
-        if (val == NULL) {
-            param.value = 0;
-            *is_to_correct = 0;
-            return param;
-        }
         int tmp = strtol(val, &val, 10);
         if (tmp || val[0] == '0') {
             param.value = tmp;
